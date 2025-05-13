@@ -16,9 +16,6 @@ enum WeaponType: String, Codable {
     case simple
     case martial
     case ranged
-    case melee
-    case finesse
-    case thrown
     // ... altri se necessario
 }
 

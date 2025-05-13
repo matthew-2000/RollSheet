@@ -18,7 +18,7 @@ L'app aiuterà i giocatori a tenere traccia di statistiche, abilità, incantesim
 
 ---
 
-## Tecnologie Scelte
+## Tecnologie
 - **Linguaggio:** Swift
 - **Interfaccia:** SwiftUI
 - **Persistenza dati:** SwiftData
@@ -36,37 +36,6 @@ L'app aiuterà i giocatori a tenere traccia di statistiche, abilità, incantesim
 - **Spellbook Manager**: gestione degli incantesimi
 - **Notes Manager**: gestione di appunti e diario di gioco
 - **Condition Tracker**: applicazione e rimozione di condizioni di stato
-
----
-
-## Modelli Dati (SwiftData)
-- **Character**
-  - nome (String)
-  - classe (String)
-  - razza (String)
-  - livello (Int)
-  - statistiche (forza, destrezza, costituzione, intelligenza, saggezza, carisma)
-  - punti ferita (massimi, attuali, temporanei)
-  - iniziativa, velocità
-  - abilità salvate
-  - proficienze, linguaggi
-
-- **Item**
-  - nome (String)
-  - descrizione (String)
-  - peso (Double)
-  - equipaggiato (Bool)
-
-- **Spell**
-  - nome (String)
-  - livello (Int)
-  - descrizione (String)
-  - incantesimo preparato (Bool)
-
-- **Note**
-  - titolo (String)
-  - contenuto (String)
-  - data creazione
 
 ---
 
