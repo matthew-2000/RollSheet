@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		3B1170A12DD38C1400E7F065 /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 3B1170A02DD38C0B00E7F065 /* .gitignore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		3BF040F32DBFADB200EBC5C0 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -24,6 +28,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		3B1170A02DD38C0B00E7F065 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		3BF040E22DBFADB100EBC5C0 /* RollSheet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RollSheet.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3BF040F22DBFADB200EBC5C0 /* RollSheetTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RollSheetTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3BF040FC2DBFADB200EBC5C0 /* RollSheetUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RollSheetUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -75,6 +80,7 @@
 		3BF040D92DBFADB100EBC5C0 = {
 			isa = PBXGroup;
 			children = (
+				3B1170A02DD38C0B00E7F065 /* .gitignore */,
 				3BF040E42DBFADB100EBC5C0 /* RollSheet */,
 				3BF040F52DBFADB200EBC5C0 /* RollSheetTests */,
 				3BF040FF2DBFADB200EBC5C0 /* RollSheetUITests */,
@@ -212,6 +218,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3B1170A12DD38C1400E7F065 /* .gitignore in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
