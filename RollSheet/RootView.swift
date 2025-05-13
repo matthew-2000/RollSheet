@@ -17,10 +17,9 @@ struct RootView: View {
             CharacterListView(selectedCharacter: $selectedCharacter)
         } detail: {
             if let character = selectedCharacter {
-                Text("Dettagli di \(character.name)") // placeholder
+                CharacterDetailView(character: character)
             } else {
-                Text("Seleziona un personaggio")
-                    .foregroundStyle(.secondary)
+                ContentUnavailableView("Nessun personaggio selezionato", systemImage: "person.crop.circle", description: Text("Seleziona un personaggio dalla lista a sinistra."))
             }
         }
     }
