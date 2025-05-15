@@ -13,7 +13,7 @@ private enum RS {
     static let gap: CGFloat        = 20
     static let cardGap: CGFloat    = 16
     static let corner: CGFloat     = 16
-    static let avatar: CGFloat     = 110
+    static let avatar: CGFloat     = 150
     static let cardHeight: CGFloat = 220   // altezza uniforme
 }
 
@@ -30,7 +30,8 @@ struct CharacterDetailView: View {
                 // ─────────── Main layout: stats col. sinistra + griglia destra ───────────
                 ViewThatFits(in: .horizontal) {
                     HStack(alignment: .top, spacing: RS.gap) {
-                        statsColumn.frame(maxWidth: 260)
+                        statsColumn
+                            .frame(minWidth: 160, maxWidth: 400)
                         rightGrid
                     }
                     VStack(spacing: RS.gap) {
@@ -78,6 +79,7 @@ private extension CharacterDetailView {
                             .font(.system(size: 44))
                             .foregroundColor(.orange.opacity(0.75))
                     }
+                    .padding(.horizontal)
                 
                 VStack(alignment: .leading, spacing: 2) {
                     RSEditInlineText(text: $character.name,
@@ -87,65 +89,81 @@ private extension CharacterDetailView {
                                        font: .title3.bold(),
                                        prefix: "Livello ")
                     
-                    HStack(spacing: 4) { Text("Razza:").font(.headline);   RSEditInlineText(text: $character.race, font: .title3) }
-                    HStack(spacing: 4) { Text("Classe:").font(.headline);  RSEditInlineText(text: $character.characterClass, font: .title3) }
+                    HStack(spacing: 4) { Text("Razza:").font(.headline);   RSEditInlineText(text: $character.race, font: .title2) }
+                    HStack(spacing: 4) { Text("Classe:").font(.headline);  RSEditInlineText(text: $character.characterClass, font: .title2) }
                     HStack(spacing: 4) {
                         Text("Background:").font(.headline)
                         RSEditInlineText(text: Binding(get: { character.background ?? "" },
                                                        set: { character.background = $0 }),
-                                         font: .title3)
+                                         font: .title2)
                     }
                     HStack(spacing: 4) {
                         Text("Allineamento:").font(.headline)
                         RSEditInlineText(text: Binding(get: { character.alignment ?? "" },
                                                        set: { character.alignment = $0 }),
-                                         font: .title3)
+                                         font: .title2)
                     }
                     Spacer()
                     Button {
                         character.inspiration.toggle()
                     } label: {
                         Label("Ispirazione", systemImage: character.inspiration ? "sun.max.fill" : "sun.max")
+                            .foregroundColor(character.inspiration ? .orange : .secondary)
                     }
+                    .padding(.top)
                 }
                 Spacer(minLength: 0)
             }
         }
+        .frame(minWidth: 650)
     }
     
     // ── Mini-card Punti Ferita
     var hpMiniCard: some View {
-        RSCard(title: "Punti Ferita", fixedHeight: false) {
+        RSCard(title: "Punti Ferita") {
             VStack(spacing: 14) {
                 RSEditNumber(label: "Massimi",    value: $character.maxHP)
                 RSEditNumber(label: "Correnti",   value: $character.currentHP)
                 RSEditNumber(label: "Temporanei", value: $character.tempHP)
             }
         }
-        .frame(width: 190)
     }
     
     // ── Mini-card Death Saves
     var deathSaveMiniCard: some View {
-        RSCard(title: "Tiri Salvezza", fixedHeight: false) {
+        RSCard(title: "Tiri Salvezza") {
             RSDeathSaveDots(successes: $character.deathSavesSuccess,
                             failures:  $character.deathSavesFailure)
         }
-        .frame(width: 190)
     }
 }
 
 // MARK: - Colonna sinistra (6 caratteristiche)
 private extension CharacterDetailView {
     var statsColumn: some View {
-        VStack(spacing: RS.cardGap) {
-            RSStat("FOR", value: $character.strength)
-            RSStat("DES", value: $character.dexterity)
-            RSStat("COS", value: $character.constitution)
-            RSStat("INT", value: $character.intelligence)
-            RSStat("SAG", value: $character.wisdom)
-            RSStat("CAR", value: $character.charisma)
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .top, spacing: RS.cardGap) {
+                VStack(spacing: RS.cardGap) {
+                    RSStat("FOR", value: $character.strength)
+                    RSStat("COS", value: $character.constitution)
+                    RSStat("SAG", value: $character.wisdom)
+                }
+                VStack(spacing: RS.cardGap) {
+                    RSStat("DES", value: $character.dexterity)
+                    RSStat("INT", value: $character.intelligence)
+                    RSStat("CAR", value: $character.charisma)
+                }
+            }
+            VStack(spacing: RS.cardGap) {
+                RSStat("FOR", value: $character.strength)
+                RSStat("DES", value: $character.dexterity)
+                RSStat("COS", value: $character.constitution)
+                RSStat("INT", value: $character.intelligence)
+                RSStat("SAG", value: $character.wisdom)
+                RSStat("CAR", value: $character.charisma)
+            }
         }
+        .frame(maxWidth: 400)
     }
 }
 
@@ -157,10 +175,11 @@ private extension CharacterDetailView {
             statCard
             combatCard
             weaponsCard
+            equipmentCard
+            speciesTraitsCard
             classFeaturesCard
             featsCard
-            speciesTraitsCard
-            equipmentCard
+            spellCard
         }
         .frame(maxWidth: .infinity)
     }
@@ -168,6 +187,7 @@ private extension CharacterDetailView {
     var statCard: some View {
         RSCard(title: "Statistiche") {    // altezza fissa come le altre
             RSEditNumber(label: "Bonus Competenza", value: $character.proficiencyBonus)
+            RSEditNumber(label: "Percezione Passiva", value: $character.passivePerception)
         }
     }
     
@@ -176,18 +196,18 @@ private extension CharacterDetailView {
             VStack(spacing: 18) {
                 RSEditNumber(label: "CA", value: $character.armorClass)
                 RSEditNumber(label: "Iniziativa", value: $character.initiative)
-                RSEditNumber(label: "Velocità", value: $character.speed, suffix: " m")
-                RSEditNumber(label: "Percezione Passiva", value: $character.passivePerception)
+                RSEditNumber(label: "Velocità (m)", value: $character.speed)
             }
         }
     }
     
     // ── Card vuote in traduzione
     var weaponsCard: some View { RSCard(title: "Armi e Danni") { EmptyView() } }
-    var classFeaturesCard: some View { RSCard(title: "Abilità di Classe") { EmptyView() } }
+    var classFeaturesCard: some View { RSCard(title: "\(character.characterClass) - Abilità") { EmptyView() } }
     var featsCard: some View { RSCard(title: "Talenti") { EmptyView() } }
-    var speciesTraitsCard: some View { RSCard(title: "Abilità di Specie") { EmptyView() } }
+    var speciesTraitsCard: some View { RSCard(title: "\(character.race) - Abilità") { EmptyView() } }
     var equipmentCard: some View { RSCard(title: "Addestramento e Competenze") { EmptyView() } }
+    var spellCard: some View { RSCard(title: "Incantesimi") { EmptyView() } }
 }
 
 // MARK: - Generic Card
@@ -234,7 +254,8 @@ private struct RSEditText: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label).font(.subheadline.weight(.semibold))
-            RSEditInlineText(text: $text, font: .title3)
+            RSEditInlineText(text: $text, font: .title)
+                .bold()
         }
     }
 }
@@ -252,7 +273,7 @@ private struct RSEditNumber: View {
         HStack {
             Text(label).font(.headline)
             Spacer()
-            RSEditInlineNumber(value: $value, font: .title3.monospacedDigit())
+            RSEditInlineNumber(value: $value, font: .title.monospacedDigit())
             if !suffix.isEmpty { Text(suffix).foregroundColor(.secondary) }
         }
     }
@@ -267,7 +288,7 @@ private struct RSEditInlineText: View {
     var body: some View {
         ZStack(alignment: .leading) {
             if !foc { Text(text.isEmpty ? "—" : text).font(font) }
-            TextField("", text: $text)
+            TextField("", text: $text, onCommit: { foc = false })
                 .font(font)
                 .opacity(foc ? 1 : 0)
                 .focused($foc)
@@ -283,17 +304,29 @@ private struct RSEditInlineNumber: View {
     var font: Font = .body
     var prefix: String = ""
     @FocusState private var foc: Bool
-    
-    private static let nf: NumberFormatter = { let f = NumberFormatter(); f.allowsFloats = false; return f }()
-    
+
+    @State private var text: String = ""
+
     var body: some View {
         ZStack(alignment: .leading) {
-            if !foc { Text("\(prefix)\(value)").font(font) }
+            if !foc {
+                Text("\(prefix)\(value)").font(font).bold()
+            }
             HStack(spacing: 0) {
                 Text(prefix)
-                TextField("", value: $value, formatter: Self.nf)
-                    .frame(width: 50)
-                    .multilineTextAlignment(.trailing)
+                TextField("", text: $text, onCommit: {
+                    foc = false
+                })
+                .frame(width: 60)
+                .multilineTextAlignment(.trailing)
+                .onChange(of: foc) {
+                    if foc {
+                        // Mostra sempre il valore corrente quando entri in edit
+                        text = String(value)
+                    } else {
+                        applyChange()
+                    }
+                }
             }
             .font(font)
             .opacity(foc ? 1 : 0)
@@ -301,6 +334,22 @@ private struct RSEditInlineNumber: View {
         }
         .contentShape(Rectangle())
         .onTapGesture { foc = true }
+    }
+
+    private func applyChange() {
+        guard !text.isEmpty else { return }
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if trimmed.hasPrefix("+") || trimmed.hasPrefix("-") {
+            // Somma o sottrazione rispetto al valore attuale
+            if let delta = Int(trimmed) {
+                value += delta
+            }
+        } else if let n = Int(trimmed) {
+            value = n
+        }
+        // Dopo il commit, resetta il campo col valore attuale
+        text = String(value)
     }
 }
 
@@ -312,13 +361,13 @@ private struct RSIncDec: View {
     var body: some View {
         HStack(spacing: 8) {
             Button { if value > range.lowerBound { value -= 1 } }
-                   label: { Image(systemName: "minus.circle.fill") }
+                   label: { Image(systemName: "minus.circle") }
             Text("\(value)")
                 .font(.system(size: 24, weight: .bold, design: .rounded))
                 .frame(minWidth: 48)
                 .monospacedDigit()
             Button { if value < range.upperBound { value += 1 } }
-                   label: { Image(systemName: "plus.circle.fill") }
+                   label: { Image(systemName: "plus.circle") }
         }
         .buttonStyle(.plain)
         .foregroundColor(.orange)
@@ -340,10 +389,7 @@ private struct RSStat: View {
     var body: some View {
         VStack(spacing: 16) {
             Text(title)
-                .font(.headline.weight(.bold))
-                .foregroundColor(.white)
-                .padding(12)
-                .background(Circle().fill(Color.orange))
+                .font(.title.weight(.bold))
             
             Text(String(format: "%+d", modifier))
                 .font(.system(size: 36, weight: .bold, design: .rounded))
@@ -402,4 +448,12 @@ private struct RSDeathSaveDots: View {
         }
     }
 
+}
+
+#Preview {
+    let context = PreviewData.container.mainContext
+    let character = try! context.fetch(FetchDescriptor<Character>()).first!
+
+    return CharacterDetailView(character: character)
+        .modelContainer(PreviewData.container)
 }
