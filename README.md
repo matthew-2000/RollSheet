@@ -1,5 +1,7 @@
 # 🧙‍♂️ RollSheet
 
+<img src="RollSheet/Resource/Assets.xcassets/AppIcon.appiconset/Group 1.png" alt="RollSheet App Icon" width="120" />
+
 Welcome, brave adventurer, to **RollSheet** — your personal spellbook for tracking characters across many perilous quests and tabletop campaigns!
 
 ## 🐉 What is This?
