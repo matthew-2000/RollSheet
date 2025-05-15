@@ -2,7 +2,7 @@
 //  CharacterDetailView.swift
 //  RollSheet
 //
-//  UI tuned – 15 May 2025
+//  UI tuned – 15 May 2025 (perf-granular)
 //
 
 import SwiftUI
@@ -14,7 +14,7 @@ private enum RS {
     static let cardGap: CGFloat    = 16
     static let corner: CGFloat     = 16
     static let avatar: CGFloat     = 150
-    static let cardHeight: CGFloat = 220   // altezza uniforme
+    static let cardHeight: CGFloat = 220       // altezza uniforme
 }
 
 // MARK: - Root
@@ -25,18 +25,33 @@ struct CharacterDetailView: View {
         ScrollView {
             VStack(spacing: RS.gap) {
                 
-                headerRow                        // ── Header + HP + Death Saves
+                HeaderRowView(character: character)      // avatar + HP + death saves
                 
                 // ─────────── Main layout: stats col. sinistra + griglia destra ───────────
                 ViewThatFits(in: .horizontal) {
                     HStack(alignment: .top, spacing: RS.gap) {
-                        statsColumn
-                            .frame(minWidth: 160, maxWidth: 400)
-                        rightGrid
+                        StatsColumnView(
+                            strength:     $character.strength,
+                            dexterity:    $character.dexterity,
+                            constitution: $character.constitution,
+                            intelligence: $character.intelligence,
+                            wisdom:       $character.wisdom,
+                            charisma:     $character.charisma
+                        )
+                        .frame(minWidth: 160, maxWidth: 400)
+                        
+                        RightGridView(character: character)
                     }
                     VStack(spacing: RS.gap) {
-                        statsColumn
-                        rightGrid
+                        StatsColumnView(
+                            strength:     $character.strength,
+                            dexterity:    $character.dexterity,
+                            constitution: $character.constitution,
+                            intelligence: $character.intelligence,
+                            wisdom:       $character.wisdom,
+                            charisma:     $character.charisma
+                        )
+                        RightGridView(character: character)
                     }
                 }
             }
@@ -48,27 +63,39 @@ struct CharacterDetailView: View {
     }
 }
 
-// MARK: - Header row (Info + HP + Death Saves)
-private extension CharacterDetailView {
-    var headerRow: some View {
+// MARK: - HEADER ROW
+private struct HeaderRowView: View {
+    @Bindable var character: Character
+    
+    var body: some View {
         ViewThatFits(in: .horizontal) {
             HStack(alignment: .top, spacing: RS.gap) {
-                headerInfoCard
-                hpMiniCard
-                deathSaveMiniCard
+                HeaderInfoCard(character: character)
+                HPMiniCard(maxHP:     $character.maxHP,
+                           currentHP: $character.currentHP,
+                           tempHP:    $character.tempHP)
+                DeathSaveMiniCard(successes: $character.deathSavesSuccess,
+                                  failures:  $character.deathSavesFailure)
             }
             VStack(spacing: RS.gap) {
-                headerInfoCard
+                HeaderInfoCard(character: character)
                 HStack(spacing: RS.cardGap) {
-                    hpMiniCard
-                    deathSaveMiniCard
+                    HPMiniCard(maxHP:     $character.maxHP,
+                               currentHP: $character.currentHP,
+                               tempHP:    $character.tempHP)
+                    DeathSaveMiniCard(successes: $character.deathSavesSuccess,
+                                      failures:  $character.deathSavesFailure)
                 }
             }
         }
     }
+}
+
+// ── 1. Avatar + anagrafica
+private struct HeaderInfoCard: View {
+    @Bindable var character: Character
     
-    // ── Card avatar + anagrafica
-    var headerInfoCard: some View {
+    var body: some View {
         RSCard {
             HStack(spacing: 18) {
                 Circle()
@@ -89,7 +116,7 @@ private extension CharacterDetailView {
                                        font: .title3.bold(),
                                        prefix: "Livello ")
                     
-                    HStack(spacing: 4) { Text("Razza:").font(.headline);   RSEditInlineText(text: $character.race, font: .title2) }
+                    HStack(spacing: 4) { Text("Razza:").font(.headline);   RSEditInlineText(text: $character.race,            font: .title2) }
                     HStack(spacing: 4) { Text("Classe:").font(.headline);  RSEditInlineText(text: $character.characterClass, font: .title2) }
                     HStack(spacing: 4) {
                         Text("Background:").font(.headline)
@@ -117,100 +144,137 @@ private extension CharacterDetailView {
         }
         .frame(minWidth: 650)
     }
+}
+
+// ── 2. HP card
+private struct HPMiniCard: View {
+    @Binding var maxHP:     Int
+    @Binding var currentHP: Int
+    @Binding var tempHP:    Int
     
-    // ── Mini-card Punti Ferita
-    var hpMiniCard: some View {
+    var body: some View {
         RSCard(title: "Punti Ferita") {
             VStack(spacing: 14) {
-                RSEditNumber(label: "Massimi",    value: $character.maxHP)
-                RSEditNumber(label: "Correnti",   value: $character.currentHP)
-                RSEditNumber(label: "Temporanei", value: $character.tempHP)
+                RSEditNumber(label: "Massimi",    value: $maxHP)
+                RSEditNumber(label: "Correnti",   value: $currentHP)
+                RSEditNumber(label: "Temporanei", value: $tempHP)
             }
-        }
-    }
-    
-    // ── Mini-card Death Saves
-    var deathSaveMiniCard: some View {
-        RSCard(title: "Tiri Salvezza") {
-            RSDeathSaveDots(successes: $character.deathSavesSuccess,
-                            failures:  $character.deathSavesFailure)
         }
     }
 }
 
-// MARK: - Colonna sinistra (6 caratteristiche)
-private extension CharacterDetailView {
-    var statsColumn: some View {
+// ── 3. Death Save card
+private struct DeathSaveMiniCard: View {
+    @Binding var successes: Int
+    @Binding var failures:  Int
+    
+    var body: some View {
+        RSCard(title: "Tiri Salvezza") {
+            RSDeathSaveDots(successes: $successes,
+                            failures:  $failures)
+        }
+    }
+}
+
+// MARK: - STATS COLUMN
+private struct StatsColumnView: View {
+    @Binding var strength:     Int
+    @Binding var dexterity:    Int
+    @Binding var constitution: Int
+    @Binding var intelligence: Int
+    @Binding var wisdom:       Int
+    @Binding var charisma:     Int
+    
+    var body: some View {
         ViewThatFits(in: .horizontal) {
             HStack(alignment: .top, spacing: RS.cardGap) {
                 VStack(spacing: RS.cardGap) {
-                    RSStat("FOR", value: $character.strength)
-                    RSStat("COS", value: $character.constitution)
-                    RSStat("SAG", value: $character.wisdom)
+                    RSStat("FOR", value: $strength)
+                    RSStat("COS", value: $constitution)
+                    RSStat("SAG", value: $wisdom)
                 }
                 VStack(spacing: RS.cardGap) {
-                    RSStat("DES", value: $character.dexterity)
-                    RSStat("INT", value: $character.intelligence)
-                    RSStat("CAR", value: $character.charisma)
+                    RSStat("DES", value: $dexterity)
+                    RSStat("INT", value: $intelligence)
+                    RSStat("CAR", value: $charisma)
                 }
             }
             VStack(spacing: RS.cardGap) {
-                RSStat("FOR", value: $character.strength)
-                RSStat("DES", value: $character.dexterity)
-                RSStat("COS", value: $character.constitution)
-                RSStat("INT", value: $character.intelligence)
-                RSStat("SAG", value: $character.wisdom)
-                RSStat("CAR", value: $character.charisma)
+                RSStat("FOR", value: $strength)
+                RSStat("DES", value: $dexterity)
+                RSStat("COS", value: $constitution)
+                RSStat("INT", value: $intelligence)
+                RSStat("SAG", value: $wisdom)
+                RSStat("CAR", value: $charisma)
             }
         }
         .frame(maxWidth: 400)
     }
 }
 
-// MARK: - Grid destra
-private extension CharacterDetailView {
-    var rightGrid: some View {
+// MARK: - RIGHT GRID
+private struct RightGridView: View {
+    @Bindable var character: Character
+    
+    var body: some View {
         LazyVGrid(columns: [GridItem(.adaptive(minimum: 280), spacing: RS.cardGap)],
                   spacing: RS.cardGap) {
-            statCard
-            combatCard
-            weaponsCard
-            equipmentCard
-            speciesTraitsCard
-            classFeaturesCard
-            featsCard
-            spellCard
+            
+            StatCardView(proficiencyBonus: $character.proficiencyBonus,
+                         passivePerception: $character.passivePerception)
+            
+            CombatCardView(armorClass: $character.armorClass,
+                           initiative: $character.initiative,
+                           speed:      $character.speed)
+            
+            EmptyCard(title: "Armi e Danni")
+            EmptyCard(title: "\(character.race) – Abilità")
+            EmptyCard(title: "\(character.characterClass) – Abilità")
+            EmptyCard(title: "Talenti")
+            EmptyCard(title: "Addestramento e Competenze")
+            EmptyCard(title: "Incantesimi")
         }
         .frame(maxWidth: .infinity)
     }
+}
+
+// ── 1. Stat card
+private struct StatCardView: View {
+    @Binding var proficiencyBonus:  Int
+    @Binding var passivePerception: Int
     
-    var statCard: some View {
-        RSCard(title: "Statistiche") {    // altezza fissa come le altre
-            RSEditNumber(label: "Bonus Competenza", value: $character.proficiencyBonus)
-            RSEditNumber(label: "Percezione Passiva", value: $character.passivePerception)
+    var body: some View {
+        RSCard(title: "Statistiche") {
+            RSEditNumber(label: "Bonus Competenza",   value: $proficiencyBonus)
+            RSEditNumber(label: "Percezione Passiva", value: $passivePerception)
         }
     }
+}
+
+// ── 2. Combat card
+private struct CombatCardView: View {
+    @Binding var armorClass: Int
+    @Binding var initiative: Int
+    @Binding var speed:      Int
     
-    var combatCard: some View {
+    var body: some View {
         RSCard(title: "Combattimento") {
             VStack(spacing: 18) {
-                RSEditNumber(label: "CA", value: $character.armorClass)
-                RSEditNumber(label: "Iniziativa", value: $character.initiative)
-                RSEditNumber(label: "Velocità (m)", value: $character.speed)
+                RSEditNumber(label: "CA",          value: $armorClass)
+                RSEditNumber(label: "Iniziativa",  value: $initiative)
+                RSEditNumber(label: "Velocità (m)", value: $speed)
             }
         }
     }
-    
-    // ── Card vuote in traduzione
-    var weaponsCard: some View { RSCard(title: "Armi e Danni") { EmptyView() } }
-    var classFeaturesCard: some View { RSCard(title: "\(character.characterClass) - Abilità") { EmptyView() } }
-    var featsCard: some View { RSCard(title: "Talenti") { EmptyView() } }
-    var speciesTraitsCard: some View { RSCard(title: "\(character.race) - Abilità") { EmptyView() } }
-    var equipmentCard: some View { RSCard(title: "Addestramento e Competenze") { EmptyView() } }
-    var spellCard: some View { RSCard(title: "Incantesimi") { EmptyView() } }
 }
 
-// MARK: - Generic Card
+// ── 3. Placeholder card
+private struct EmptyCard: View {
+    let title: String
+    var body: some View { RSCard(title: title) { EmptyView() } }
+}
+
+// MARK: - GENERIC CARD (lightweight bg + no shadow)
 private struct RSCard<Content: View>: View {
     var title: String?
     var fixedHeight: Bool = true
@@ -234,14 +298,15 @@ private struct RSCard<Content: View>: View {
         .frame(maxWidth: .infinity,
                minHeight: fixedHeight ? RS.cardHeight : nil,
                alignment: .topLeading)
-        .background(.regularMaterial,
-                    in: RoundedRectangle(cornerRadius: RS.corner, style: .continuous))
+        .background(
+            RoundedRectangle(cornerRadius: RS.corner, style: .continuous)
+                .fill(.background.opacity(0.6))
+        )
         .overlay(
             RoundedRectangle(cornerRadius: RS.corner)
-                .stroke(.orange.opacity(0.15), lineWidth: 0)
-                .allowsHitTesting(false)   // non blocca i tap interni
+                .stroke(.orange.opacity(0.15), lineWidth: 0.5)
+                .allowsHitTesting(false)
         )
-        .shadow(color: .black.opacity(0.05), radius: 3, x: 0, y: 1)
     }
 }
 
@@ -398,14 +463,15 @@ private struct RSStat: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity)
-        .background(.regularMaterial,
-                    in: RoundedRectangle(cornerRadius: RS.corner, style: .continuous))
+        .background(
+            RoundedRectangle(cornerRadius: RS.corner, style: .continuous)
+                .fill(.background.opacity(0.6))
+        )
         .overlay(
             RoundedRectangle(cornerRadius: RS.corner)
-                .stroke(.orange.opacity(0.15), lineWidth: 0)
+                .stroke(.orange.opacity(0.15), lineWidth: 0.5)
                 .allowsHitTesting(false)
         )
-        .shadow(color: .black.opacity(0.04), radius: 2, x: 0, y: 1)
     }
 }
 
@@ -447,9 +513,9 @@ private struct RSDeathSaveDots: View {
             }
         }
     }
-
 }
 
+/*
 #Preview {
     let context = PreviewData.container.mainContext
     let character = try! context.fetch(FetchDescriptor<Character>()).first!
@@ -457,3 +523,4 @@ private struct RSDeathSaveDots: View {
     return CharacterDetailView(character: character)
         .modelContainer(PreviewData.container)
 }
+*/
