@@ -30,9 +30,13 @@ struct CharacterListView: View {
                         .foregroundStyle(.secondary)
                 }
                 .tag(character)
-            }
-            .onDelete { indexSet in
-                indexSet.forEach { viewModel.deleteCharacter(viewModel.characters[$0]) }
+                .contextMenu {
+                    Button(role: .destructive) {
+                        viewModel.deleteCharacter(character)
+                    } label: {
+                        Label("Elimina", systemImage: "trash")
+                    }
+                }
             }
         }
         .navigationTitle("Personaggi")

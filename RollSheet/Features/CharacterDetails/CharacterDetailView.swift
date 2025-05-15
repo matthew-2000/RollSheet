@@ -2,7 +2,7 @@
 //  CharacterDetailView.swift
 //  RollSheet
 //
-//  Two-column redesign – 15 May 2025
+//  UI tuned – 15 May 2025
 //
 
 import SwiftUI
@@ -10,10 +10,11 @@ import SwiftData
 
 // MARK: - Design tokens
 private enum RS {
-    static let gap: CGFloat     = 28
-    static let cardGap: CGFloat = 24
-    static let corner: CGFloat  = 16
-    static let avatar: CGFloat  = 120
+    static let gap: CGFloat        = 20
+    static let cardGap: CGFloat    = 16
+    static let corner: CGFloat     = 16
+    static let avatar: CGFloat     = 110
+    static let cardHeight: CGFloat = 220   // altezza uniforme
 }
 
 // MARK: - Root
@@ -24,17 +25,17 @@ struct CharacterDetailView: View {
         ScrollView {
             VStack(spacing: RS.gap) {
                 
-                headerCard
+                headerRow                        // ── Header + HP + Death Saves
                 
-                // ─────────────── MAIN GRID (stats left • other right) ───────────────
+                // ─────────── Main layout: stats col. sinistra + griglia destra ───────────
                 ViewThatFits(in: .horizontal) {
                     HStack(alignment: .top, spacing: RS.gap) {
                         statsColumn.frame(maxWidth: 260)
-                        rightColumn
+                        rightGrid
                     }
                     VStack(spacing: RS.gap) {
                         statsColumn
-                        rightColumn
+                        rightGrid
                     }
                 }
             }
@@ -42,61 +43,99 @@ struct CharacterDetailView: View {
         }
         .navigationTitle(character.name)
         .navigationSubtitle("\(character.race) • \(character.characterClass) • Livello \(character.level)")
-        .toolbar {
-            ToolbarItem {
-                Button {
-                    character.inspiration.toggle()
-                } label: {
-                    Label("Ispirazione",
-                          systemImage: character.inspiration
-                          ? "sparkles.circle.fill" : "sparkles.circle")
-                }
-            }
-        }
         .accentColor(.orange)
     }
 }
 
-// MARK: - Header
+// MARK: - Header row (Info + HP + Death Saves)
 private extension CharacterDetailView {
-    var headerCard: some View {
+    var headerRow: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .top, spacing: RS.gap) {
+                headerInfoCard
+                hpMiniCard
+                deathSaveMiniCard
+            }
+            VStack(spacing: RS.gap) {
+                headerInfoCard
+                HStack(spacing: RS.cardGap) {
+                    hpMiniCard
+                    deathSaveMiniCard
+                }
+            }
+        }
+    }
+    
+    // ── Card avatar + anagrafica
+    var headerInfoCard: some View {
         RSCard {
-            HStack(spacing: 22) {
-                
+            HStack(spacing: 18) {
                 Circle()
                     .fill(.orange.opacity(0.25))
                     .frame(width: RS.avatar, height: RS.avatar)
                     .overlay {
                         Image(systemName: "shield.fill")
-                            .font(.system(size: 48))
+                            .font(.system(size: 44))
                             .foregroundColor(.orange.opacity(0.75))
                     }
                 
-                VStack(alignment: .leading) {
-                    // Nome
+                VStack(alignment: .leading, spacing: 2) {
                     RSEditInlineText(text: $character.name,
-                                     font: .system(size: 34, weight: .bold, design: .rounded))
+                                     font: .system(size: 36, weight: .bold, design: .rounded))
                     
-                    // Razza • Classe
-                    VStack {
-                        RSEditInlineText(text: $character.race,
-                                         font: .title3)
-                        RSEditInlineText(text: $character.characterClass,
+                    RSEditInlineNumber(value: $character.level,
+                                       font: .title3.bold(),
+                                       prefix: "Livello ")
+                    
+                    HStack(spacing: 4) { Text("Razza:").font(.headline);   RSEditInlineText(text: $character.race, font: .title3) }
+                    HStack(spacing: 4) { Text("Classe:").font(.headline);  RSEditInlineText(text: $character.characterClass, font: .title3) }
+                    HStack(spacing: 4) {
+                        Text("Background:").font(.headline)
+                        RSEditInlineText(text: Binding(get: { character.background ?? "" },
+                                                       set: { character.background = $0 }),
                                          font: .title3)
                     }
-                    
-                    // Livello
-                    RSEditInlineNumber(value: $character.level,
-                                       font: .headline,
-                                       prefix: "Livello ")
+                    HStack(spacing: 4) {
+                        Text("Allineamento:").font(.headline)
+                        RSEditInlineText(text: Binding(get: { character.alignment ?? "" },
+                                                       set: { character.alignment = $0 }),
+                                         font: .title3)
+                    }
+                    Spacer()
+                    Button {
+                        character.inspiration.toggle()
+                    } label: {
+                        Label("Ispirazione", systemImage: character.inspiration ? "sun.max.fill" : "sun.max")
+                    }
                 }
-                Spacer()
+                Spacer(minLength: 0)
             }
         }
     }
+    
+    // ── Mini-card Punti Ferita
+    var hpMiniCard: some View {
+        RSCard(title: "Punti Ferita", fixedHeight: false) {
+            VStack(spacing: 14) {
+                RSEditNumber(label: "Massimi",    value: $character.maxHP)
+                RSEditNumber(label: "Correnti",   value: $character.currentHP)
+                RSEditNumber(label: "Temporanei", value: $character.tempHP)
+            }
+        }
+        .frame(width: 190)
+    }
+    
+    // ── Mini-card Death Saves
+    var deathSaveMiniCard: some View {
+        RSCard(title: "Tiri Salvezza", fixedHeight: false) {
+            RSDeathSaveDots(successes: $character.deathSavesSuccess,
+                            failures:  $character.deathSavesFailure)
+        }
+        .frame(width: 190)
+    }
 }
 
-// MARK: - Left column (stats)
+// MARK: - Colonna sinistra (6 caratteristiche)
 private extension CharacterDetailView {
     var statsColumn: some View {
         VStack(spacing: RS.cardGap) {
@@ -110,47 +149,31 @@ private extension CharacterDetailView {
     }
 }
 
-// MARK: - Right column
+// MARK: - Grid destra
 private extension CharacterDetailView {
-    var rightColumn: some View {
-        VStack(spacing: RS.cardGap) {
+    var rightGrid: some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 280), spacing: RS.cardGap)],
+                  spacing: RS.cardGap) {
             statCard
             combatCard
-            infoCard
-            RSCard(title: "Altro 1") { EmptyView() }   // placeholder
-            RSCard(title: "Altro 2") { EmptyView() }   // placeholder
+            weaponsCard
+            classFeaturesCard
+            featsCard
+            speciesTraitsCard
+            equipmentCard
         }
         .frame(maxWidth: .infinity)
     }
     
-    // ── Info ──
-    var infoCard: some View {
-        RSCard(title: "Informazioni") {
-            VStack(spacing: 18) {
-                RSEditText(label: "Background",
-                           text: Binding(get: { character.background ?? "" },
-                                         set: { character.background = $0 }))
-                RSEditText(label: "Allineamento",
-                           text: Binding(get: { character.alignment ?? "" },
-                                         set: { character.alignment = $0 }))
-            }
-        }
-    }
-    
-    // ── Statistiche ──
     var statCard: some View {
-        RSCard(title: "Statistiche") {
-            VStack(spacing: 24) {
-                RSEditNumber(label: "Competenza", value: $character.proficiencyBonus)
-                RSEditNumber(label: "Percezione Passiva", value: $character.passivePerception)
-            }
+        RSCard(title: "Statistiche") {    // altezza fissa come le altre
+            RSEditNumber(label: "Bonus Competenza", value: $character.proficiencyBonus)
         }
     }
     
-    // ── Combattimento ──
     var combatCard: some View {
         RSCard(title: "Combattimento") {
-            VStack(spacing: 24) {
+            VStack(spacing: 18) {
                 RSEditNumber(label: "CA", value: $character.armorClass)
                 RSEditNumber(label: "Iniziativa", value: $character.initiative)
                 RSEditNumber(label: "Velocità", value: $character.speed, suffix: " m")
@@ -158,64 +181,65 @@ private extension CharacterDetailView {
             }
         }
     }
+    
+    // ── Card vuote in traduzione
+    var weaponsCard: some View { RSCard(title: "Armi e Danni") { EmptyView() } }
+    var classFeaturesCard: some View { RSCard(title: "Abilità di Classe") { EmptyView() } }
+    var featsCard: some View { RSCard(title: "Talenti") { EmptyView() } }
+    var speciesTraitsCard: some View { RSCard(title: "Abilità di Specie") { EmptyView() } }
+    var equipmentCard: some View { RSCard(title: "Addestramento e Competenze") { EmptyView() } }
 }
 
 // MARK: - Generic Card
 private struct RSCard<Content: View>: View {
     var title: String?
+    var fixedHeight: Bool = true
     @ViewBuilder var content: Content
     
-    init(title: String? = nil, @ViewBuilder content: () -> Content) {
-        self.title = title; self.content = content()
+    init(title: String? = nil,
+         fixedHeight: Bool = true,
+         @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.fixedHeight = fixedHeight
+        self.content = content()
     }
     
     var body: some View {
         VStack(alignment: .leading, spacing: RS.cardGap) {
-            if let title {
-                Text(title).font(.title2.weight(.semibold))
-            }
+            if let title { Text(title).font(.title2.weight(.semibold)) }
             content
+            if fixedHeight { Spacer(minLength: 0) }
         }
-        .padding(28)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(24)
+        .frame(maxWidth: .infinity,
+               minHeight: fixedHeight ? RS.cardHeight : nil,
+               alignment: .topLeading)
         .background(.regularMaterial,
                     in: RoundedRectangle(cornerRadius: RS.corner, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: RS.corner)
-                .stroke(.orange.opacity(0.15), lineWidth: 1)
+                .stroke(.orange.opacity(0.15), lineWidth: 0)
+                .allowsHitTesting(false)   // non blocca i tap interni
         )
         .shadow(color: .black.opacity(0.05), radius: 3, x: 0, y: 1)
     }
 }
 
-// MARK: - “Ghost” TextField (String)
+// MARK: - “Ghost” editable Text (String)
 private struct RSEditText: View {
     var label: String
     @Binding var text: String
     @FocusState private var foc: Bool
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 4) {
             Text(label).font(.subheadline.weight(.semibold))
-            ZStack(alignment: .leading) {
-                // testo statico
-                if !foc { Text(text.isEmpty ? "—" : text) }
-                // textfield
-                TextField("", text: $text)
-                    .opacity(foc ? 1 : 0)
-                    .focused($foc)
-            }
-            .font(.title3)
-            .overlay(
-                RoundedRectangle(cornerRadius: 6)
-                    .stroke(.orange.opacity(foc ? 0.6 : 0), lineWidth: 2)
-            )
-            .onTapGesture { foc = true }
+            RSEditInlineText(text: $text, font: .title3)
         }
     }
 }
 
-// MARK: - “Ghost” TextField (Int)
+// MARK: - “Ghost” editable Number
 private struct RSEditNumber: View {
     var label: String
     @Binding var value: Int
@@ -228,26 +252,13 @@ private struct RSEditNumber: View {
         HStack {
             Text(label).font(.headline)
             Spacer()
-            ZStack {
-                if !foc { Text("\(value)").monospacedDigit() }
-                TextField("", value: $value, formatter: RSEditNumber.nf)
-                    .frame(width: 70, alignment: .trailing)
-                    .opacity(foc ? 1 : 0)
-                    .multilineTextAlignment(.trailing)
-                    .focused($foc)
-            }
-            .font(.title3.monospacedDigit())
-            .overlay(
-                RoundedRectangle(cornerRadius: 6)
-                    .stroke(.orange.opacity(foc ? 0.6 : 0), lineWidth: 2)
-            )
-            .onTapGesture { foc = true }
+            RSEditInlineNumber(value: $value, font: .title3.monospacedDigit())
             if !suffix.isEmpty { Text(suffix).foregroundColor(.secondary) }
         }
     }
 }
 
-// MARK: - Inline editors for header
+// MARK: - Inline editable (String)
 private struct RSEditInlineText: View {
     @Binding var text: String
     var font: Font = .title3
@@ -261,44 +272,45 @@ private struct RSEditInlineText: View {
                 .opacity(foc ? 1 : 0)
                 .focused($foc)
         }
+        .contentShape(Rectangle())
         .onTapGesture { foc = true }
     }
 }
 
+// MARK: - Inline editable (Number)
 private struct RSEditInlineNumber: View {
     @Binding var value: Int
     var font: Font = .body
     var prefix: String = ""
     @FocusState private var foc: Bool
+    
     private static let nf: NumberFormatter = { let f = NumberFormatter(); f.allowsFloats = false; return f }()
     
     var body: some View {
         ZStack(alignment: .leading) {
-            if !foc {
-                Text("\(prefix)\(value)")
-                    .font(font)
-            }
+            if !foc { Text("\(prefix)\(value)").font(font) }
             HStack(spacing: 0) {
                 Text(prefix)
-                TextField("", value: $value, formatter: RSEditInlineNumber.nf)
-                    .frame(width: 40)
+                TextField("", value: $value, formatter: Self.nf)
+                    .frame(width: 50)
                     .multilineTextAlignment(.trailing)
             }
             .font(font)
             .opacity(foc ? 1 : 0)
             .focused($foc)
         }
+        .contentShape(Rectangle())
         .onTapGesture { foc = true }
     }
 }
 
-// MARK: - Plus/minus control
+// MARK: - Inc/Dec control
 private struct RSIncDec: View {
     @Binding var value: Int
     var range: ClosedRange<Int>
     
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             Button { if value > range.lowerBound { value -= 1 } }
                    label: { Image(systemName: "minus.circle.fill") }
             Text("\(value)")
@@ -314,7 +326,7 @@ private struct RSIncDec: View {
     }
 }
 
-// MARK: - Stat card (modificatore)
+// MARK: - Stat card
 private struct RSStat: View {
     let title: String
     @Binding var value: Int
@@ -326,7 +338,7 @@ private struct RSStat: View {
     var modifier: Int { (value - 10) / 2 }
     
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 16) {
             Text(title)
                 .font(.headline.weight(.bold))
                 .foregroundColor(.white)
@@ -334,20 +346,60 @@ private struct RSStat: View {
                 .background(Circle().fill(Color.orange))
             
             Text(String(format: "%+d", modifier))
-                .font(.system(size: 34, weight: .bold, design: .rounded))
+                .font(.system(size: 36, weight: .bold, design: .rounded))
             
             RSIncDec(value: $value, range: 1...30)
         }
-        .padding()
+        .padding(14)
         .frame(maxWidth: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Color(.windowBackgroundColor).opacity(0.95))
-        )
+        .background(.regularMaterial,
+                    in: RoundedRectangle(cornerRadius: RS.corner, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(Color.orange.opacity(0.12), lineWidth: 1)
+            RoundedRectangle(cornerRadius: RS.corner)
+                .stroke(.orange.opacity(0.15), lineWidth: 0)
+                .allowsHitTesting(false)
         )
         .shadow(color: .black.opacity(0.04), radius: 2, x: 0, y: 1)
     }
+}
+
+// MARK: - Death Save dots control
+private struct RSDeathSaveDots: View {
+    @Binding var successes: Int   // 0…3
+    @Binding var failures:  Int   // 0…3
+    
+    private func dot(index: Int, bound: Binding<Int>, color: Color) -> some View {
+        let filled = index < bound.wrappedValue
+        
+        return Circle()
+            .fill(filled ? color : .clear)
+            .overlay(Circle().stroke(color, lineWidth: 2))
+            .frame(width: 20, height: 20)
+            .contentShape(Circle()) // Assicura che il tap sia catturato
+            .onTapGesture {
+                if index < bound.wrappedValue {
+                    bound.wrappedValue = index
+                } else {
+                    bound.wrappedValue = index + 1
+                }
+            }
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Successi").font(.headline)
+            HStack(spacing: 6) {
+                ForEach(0..<3, id: \.self) { i in
+                    dot(index: i, bound: $successes, color: .green)
+                }
+            }
+            Text("Fallimenti").font(.headline)
+            HStack(spacing: 6) {
+                ForEach(0..<3, id: \.self) { i in
+                    dot(index: i, bound: $failures, color: .red)
+                }
+            }
+        }
+    }
+
 }
