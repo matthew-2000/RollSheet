@@ -118,6 +118,10 @@ private struct HeaderInfoCard: View {
                     
                     HStack(spacing: 4) { Text("Razza:").font(.headline);   RSEditInlineText(text: $character.race,            font: .title2) }
                     HStack(spacing: 4) { Text("Classe:").font(.headline);  RSEditInlineText(text: $character.characterClass, font: .title2) }
+                    HStack(spacing: 4) { Text("Sottoclasse:").font(.headline);  RSEditInlineText(text: Binding(
+                        get: { character.subclass ?? "" },
+                        set: { character.subclass = $0 }), font: .title2)
+                    }
                     HStack(spacing: 4) {
                         Text("Background:").font(.headline)
                         RSEditInlineText(text: Binding(get: { character.background ?? "" },
@@ -228,10 +232,10 @@ private struct RightGridView: View {
                            speed:      $character.speed)
             
             EmptyCard(title: "Armi e Danni")
+            EmptyCard(title: "Addestramento e Competenze")
             EmptyCard(title: "\(character.race) – Abilità")
             EmptyCard(title: "\(character.characterClass) – Abilità")
             EmptyCard(title: "Talenti")
-            EmptyCard(title: "Addestramento e Competenze")
             EmptyCard(title: "Incantesimi")
         }
         .frame(maxWidth: .infinity)
@@ -304,7 +308,7 @@ private struct RSCard<Content: View>: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: RS.corner)
-                .stroke(.orange.opacity(0.15), lineWidth: 0.5)
+                .stroke(.orange.opacity(0.15), lineWidth: 0)
                 .allowsHitTesting(false)
         )
     }
@@ -469,7 +473,7 @@ private struct RSStat: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: RS.corner)
-                .stroke(.orange.opacity(0.15), lineWidth: 0.5)
+                .stroke(.orange.opacity(0.15), lineWidth: 0)
                 .allowsHitTesting(false)
         )
     }
