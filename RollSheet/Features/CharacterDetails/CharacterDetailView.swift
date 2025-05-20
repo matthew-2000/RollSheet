@@ -36,7 +36,10 @@ struct CharacterDetailView: View {
                             constitution: $character.constitution,
                             intelligence: $character.intelligence,
                             wisdom:       $character.wisdom,
-                            charisma:     $character.charisma
+                            charisma:     $character.charisma,
+                            proficiencies: $character.skillProficiencies,
+                            savingThrows: $character.savingThrows,
+                            proficiencyBonus: character.proficiencyBonus
                         )
                         .frame(minWidth: 160, maxWidth: 400)
                         
@@ -49,7 +52,10 @@ struct CharacterDetailView: View {
                             constitution: $character.constitution,
                             intelligence: $character.intelligence,
                             wisdom:       $character.wisdom,
-                            charisma:     $character.charisma
+                            charisma:     $character.charisma,
+                            proficiencies: $character.skillProficiencies,
+                            savingThrows: $character.savingThrows,
+                            proficiencyBonus: character.proficiencyBonus
                         )
                         RightGridView(character: character)
                     }
@@ -188,28 +194,31 @@ private struct StatsColumnView: View {
     @Binding var intelligence: Int
     @Binding var wisdom:       Int
     @Binding var charisma:     Int
-    
+    @Binding var proficiencies: [String]
+    @Binding var savingThrows: [String]
+    var proficiencyBonus: Int
+
     var body: some View {
         ViewThatFits(in: .horizontal) {
             HStack(alignment: .top, spacing: RS.cardGap) {
                 VStack(spacing: RS.cardGap) {
-                    RSStat("FOR", value: $strength)
-                    RSStat("DES", value: $dexterity)
-                    RSStat("COS", value: $constitution)
+                    RSStat("FOR", value: $strength, skills: Character.skillMap["FOR"]!, proficiencies: $proficiencies, proficiencyBonus: 4, savingThrows: $savingThrows)
+                    RSStat("DES", value: $dexterity, skills: Character.skillMap["DES"]!, proficiencies: $proficiencies, proficiencyBonus: 4, savingThrows: $savingThrows)
+                    RSStat("COS", value: $constitution, skills: [], proficiencies: $proficiencies, proficiencyBonus: 4,  savingThrows: $savingThrows)
                 }
                 VStack(spacing: RS.cardGap) {
-                    RSStat("INT", value: $intelligence)
-                    RSStat("SAG", value: $wisdom)
-                    RSStat("CAR", value: $charisma)
+                    RSStat("INT", value: $intelligence, skills: Character.skillMap["INT"]!, proficiencies: $proficiencies, proficiencyBonus: 4,  savingThrows: $savingThrows)
+                    RSStat("SAG", value: $wisdom, skills: Character.skillMap["SAG"]!, proficiencies: $proficiencies, proficiencyBonus: 4,  savingThrows: $savingThrows)
+                    RSStat("CAR", value: $charisma, skills: Character.skillMap["CAR"]!, proficiencies: $proficiencies, proficiencyBonus: 4,  savingThrows: $savingThrows)
                 }
             }
             VStack(spacing: RS.cardGap) {
-                RSStat("FOR", value: $strength)
-                RSStat("DES", value: $dexterity)
-                RSStat("COS", value: $constitution)
-                RSStat("INT", value: $intelligence)
-                RSStat("SAG", value: $wisdom)
-                RSStat("CAR", value: $charisma)
+                RSStat("FOR", value: $strength, skills: Character.skillMap["FOR"]!, proficiencies: $proficiencies, proficiencyBonus: 4, savingThrows: $savingThrows)
+                RSStat("DES", value: $dexterity, skills: Character.skillMap["DES"]!, proficiencies: $proficiencies, proficiencyBonus: 4, savingThrows: $savingThrows)
+                RSStat("COS", value: $constitution, skills: [], proficiencies: $proficiencies, proficiencyBonus: 4,  savingThrows: $savingThrows)
+                RSStat("INT", value: $intelligence, skills: Character.skillMap["INT"]!, proficiencies: $proficiencies, proficiencyBonus: 4,  savingThrows: $savingThrows)
+                RSStat("SAG", value: $wisdom, skills: Character.skillMap["SAG"]!, proficiencies: $proficiencies, proficiencyBonus: 4,  savingThrows: $savingThrows)
+                RSStat("CAR", value: $charisma, skills: Character.skillMap["CAR"]!, proficiencies: $proficiencies, proficiencyBonus: 4,  savingThrows: $savingThrows)
             }
         }
         .frame(maxWidth: 400)
@@ -231,7 +240,6 @@ private struct RightGridView: View {
                            initiative: $character.initiative,
                            speed:      $character.speed)
             
-            EmptyCard(title: "Armi e Danni")
             EmptyCard(title: "Addestramento e Competenze")
             AbilitiesCard(title: "\(character.race) – Abilità",
                           source: .race,
@@ -304,7 +312,7 @@ struct RSCard<Content: View>: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: RS.cardGap) {
-            if let title { Text(title).font(.title2.weight(.semibold)) }
+            if let title { Text(title).font(.title2.weight(.semibold))}
             content
             if fixedHeight { Spacer(minLength: 0) }
         }
@@ -455,25 +463,83 @@ private struct RSIncDec: View {
 }
 
 // MARK: - Stat card
-private struct RSStat: View {
+struct RSStat: View {
     let title: String
     @Binding var value: Int
-    
-    init(_ t: String, value: Binding<Int>) {
-        self.title = t; self._value = value
+    @Binding var savingThrows: [String]
+    let proficiencyBonus: Int
+    let skills: [String]
+    @Binding var proficiencies: [String]
+
+    init(_ title: String,
+         value: Binding<Int>,
+         skills: [String],
+         proficiencies: Binding<[String]>,
+         proficiencyBonus: Int,
+         savingThrows: Binding<[String]>) {
+        self.title = title
+        self._value = value
+        self.skills = skills
+        self.proficiencyBonus = proficiencyBonus
+        self._proficiencies = proficiencies
+        self._savingThrows = savingThrows
     }
-    
+
     var modifier: Int { (value - 10) / 2 }
     
     var body: some View {
         VStack(spacing: 16) {
             Text(title)
                 .font(.title.weight(.bold))
-            
+
             Text(String(format: "%+d", modifier))
                 .font(.system(size: 36, weight: .bold, design: .rounded))
-            
+
             RSIncDec(value: $value, range: 1...30)
+            
+            Divider()
+
+            HStack {
+                Circle()
+                    .fill(savingThrows.contains(title) ? Color.orange : .clear)
+                    .overlay(Circle().stroke(Color.orange, lineWidth: 2))
+                    .frame(width: 16, height: 16)
+                    .contentShape(Circle())
+                    .onTapGesture {
+                        toggleSave(title)
+                    }
+
+                let bonus = modifier + (savingThrows.contains(title) ? proficiencyBonus : 0)
+
+                Text("Tiro Salvezza: \(String(format: "%+d", bonus))")
+                    .font(.subheadline)
+                
+                Spacer()
+            }
+
+            if !skills.isEmpty {
+                Divider()
+                VStack(alignment: .leading, spacing: 6) {
+                    ForEach(skills, id: \.self) { skill in
+                        HStack {
+                            Circle()
+                                .fill(proficiencies.contains(skill) ? Color.orange : .clear)
+                                .overlay(Circle().stroke(Color.orange, lineWidth: 2))
+                                .frame(width: 16, height: 16)
+                                .contentShape(Circle())
+                                .onTapGesture {
+                                    toggle(skill)
+                                }
+                            Text(skill)
+                                .font(.callout)
+                            Spacer()
+                            let skillBonus = modifier + (proficiencies.contains(skill) ? proficiencyBonus : 0)
+                            Text("\(String(format: "%+d", skillBonus))")
+                        }
+                    }
+                }
+                .padding(.top, 4)
+            }
         }
         .padding(14)
         .frame(maxWidth: .infinity)
@@ -487,6 +553,23 @@ private struct RSStat: View {
                 .allowsHitTesting(false)
         )
     }
+
+    private func toggle(_ skill: String) {
+        if let idx = proficiencies.firstIndex(of: skill) {
+            proficiencies.remove(at: idx)
+        } else {
+            proficiencies.append(skill)
+        }
+    }
+    
+    private func toggleSave(_ code: String) {
+        if let idx = savingThrows.firstIndex(of: code) {
+            savingThrows.remove(at: idx)
+        } else {
+            savingThrows.append(code)
+        }
+    }
+
 }
 
 // MARK: - Death Save dots control

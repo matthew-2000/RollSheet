@@ -20,7 +20,7 @@ struct AbilitiesCard: View {
         RSCard(title: title) {
             VStack(alignment: .leading, spacing: 10) {
                 if abilities.isEmpty {
-                    ContentUnavailableView("Nessuna abilità", systemImage: "questionmark.circle", description: Text("Aggiungi un'abilità razziale per iniziare."))
+                    ContentUnavailableView("Nessuna abilità", systemImage: "questionmark.circle", description: Text("Aggiungi un'abilità per iniziare."))
                         .frame(maxWidth: .infinity, minHeight: 120)
                 } else {
                     ForEach(abilities) { ability in

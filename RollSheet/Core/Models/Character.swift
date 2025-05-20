@@ -48,6 +48,15 @@ class Character {
     // MARK: - Competenze e Abilità
     var savingThrows: [String]
     var skillProficiencies: [String]
+    static let skillMap: [String: [String]] = [
+        "FOR": ["Atletica"],
+        "DES": ["Acrobazia", "Furtività", "Rapidità di mano"],
+        "COS": [],
+        "INT": ["Arcano", "Indagare", "Storia", "Natura", "Religione"],
+        "SAG": ["Intuizione", "Percezione", "Medicina", "Sopravvivenza", "Addestrare animali"],
+        "CAR": ["Persuasione", "Inganno", "Intrattenere", "Intimidire"]
+    ]
+
     var languages: [String]
 
     var armorProficiencies: [ArmorType]
