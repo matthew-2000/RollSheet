@@ -6,9 +6,10 @@
 //
 
 import SwiftData
+import Foundation
 
 @Model
-class Ability {
+class Ability: ObservableObject {
     var name: String
     var detail: String
     var source: AbilitySource

@@ -194,12 +194,12 @@ private struct StatsColumnView: View {
             HStack(alignment: .top, spacing: RS.cardGap) {
                 VStack(spacing: RS.cardGap) {
                     RSStat("FOR", value: $strength)
+                    RSStat("DES", value: $dexterity)
                     RSStat("COS", value: $constitution)
-                    RSStat("SAG", value: $wisdom)
                 }
                 VStack(spacing: RS.cardGap) {
-                    RSStat("DES", value: $dexterity)
                     RSStat("INT", value: $intelligence)
+                    RSStat("SAG", value: $wisdom)
                     RSStat("CAR", value: $charisma)
                 }
             }
@@ -233,8 +233,18 @@ private struct RightGridView: View {
             
             EmptyCard(title: "Armi e Danni")
             EmptyCard(title: "Addestramento e Competenze")
-            EmptyCard(title: "\(character.race) – Abilità")
-            EmptyCard(title: "\(character.characterClass) – Abilità")
+            AbilitiesCard(title: "\(character.race) – Abilità",
+                          source: .race,
+                          abilities: $character.racialAbilities)
+
+            AbilitiesCard(title: "\(character.characterClass) – Abilità",
+                          source: .class,
+                          abilities: $character.classAbilities)
+
+            AbilitiesCard(title: "\(character.subclass ?? "No subclass") – Abilità",
+                          source: .subclass,
+                          abilities: $character.subclassAbilities)
+
             EmptyCard(title: "Talenti")
             EmptyCard(title: "Incantesimi")
         }
@@ -279,7 +289,7 @@ private struct EmptyCard: View {
 }
 
 // MARK: - GENERIC CARD (lightweight bg + no shadow)
-private struct RSCard<Content: View>: View {
+struct RSCard<Content: View>: View {
     var title: String?
     var fixedHeight: Bool = true
     @ViewBuilder var content: Content
