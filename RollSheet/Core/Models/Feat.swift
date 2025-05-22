@@ -5,11 +5,11 @@
 //  Created by Matteo Ercolino on 12/05/25.
 //
 
-
 import SwiftData
+import Foundation
 
 @Model
-class Feat {
+class Feat: ObservableObject {
     var name: String
     var detail: String
     var levelAcquired: Int

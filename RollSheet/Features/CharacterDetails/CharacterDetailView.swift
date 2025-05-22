@@ -39,7 +39,7 @@ struct CharacterDetailView: View {
                             charisma:     $character.charisma,
                             proficiencies: $character.skillProficiencies,
                             savingThrows: $character.savingThrows,
-                            proficiencyBonus: character.proficiencyBonus
+                            proficiencyBonus: $character.proficiencyBonus
                         )
                         .frame(minWidth: 160, maxWidth: 400)
                         
@@ -55,7 +55,7 @@ struct CharacterDetailView: View {
                             charisma:     $character.charisma,
                             proficiencies: $character.skillProficiencies,
                             savingThrows: $character.savingThrows,
-                            proficiencyBonus: character.proficiencyBonus
+                            proficiencyBonus: $character.proficiencyBonus
                         )
                         RightGridView(character: character)
                     }
@@ -196,34 +196,65 @@ private struct StatsColumnView: View {
     @Binding var charisma:     Int
     @Binding var proficiencies: [String]
     @Binding var savingThrows: [String]
-    var proficiencyBonus: Int
+    @Binding var proficiencyBonus: Int
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
             HStack(alignment: .top, spacing: RS.cardGap) {
                 VStack(spacing: RS.cardGap) {
-                    RSStat("FOR", value: $strength, skills: Character.skillMap["FOR"]!, proficiencies: $proficiencies, proficiencyBonus: 4, savingThrows: $savingThrows)
-                    RSStat("DES", value: $dexterity, skills: Character.skillMap["DES"]!, proficiencies: $proficiencies, proficiencyBonus: 4, savingThrows: $savingThrows)
-                    RSStat("COS", value: $constitution, skills: [], proficiencies: $proficiencies, proficiencyBonus: 4,  savingThrows: $savingThrows)
+                    ProficiencyBonusCard(bonus: $proficiencyBonus)
+                    RSStat("FOR", value: $strength, skills: Character.skillMap["FOR"]!, proficiencies: $proficiencies, proficiencyBonus: proficiencyBonus, savingThrows: $savingThrows)
+                    RSStat("DES", value: $dexterity, skills: Character.skillMap["DES"]!, proficiencies: $proficiencies, proficiencyBonus: proficiencyBonus, savingThrows: $savingThrows)
+                    RSStat("COS", value: $constitution, skills: [], proficiencies: $proficiencies, proficiencyBonus: proficiencyBonus,  savingThrows: $savingThrows)
                 }
                 VStack(spacing: RS.cardGap) {
-                    RSStat("INT", value: $intelligence, skills: Character.skillMap["INT"]!, proficiencies: $proficiencies, proficiencyBonus: 4,  savingThrows: $savingThrows)
-                    RSStat("SAG", value: $wisdom, skills: Character.skillMap["SAG"]!, proficiencies: $proficiencies, proficiencyBonus: 4,  savingThrows: $savingThrows)
-                    RSStat("CAR", value: $charisma, skills: Character.skillMap["CAR"]!, proficiencies: $proficiencies, proficiencyBonus: 4,  savingThrows: $savingThrows)
+                    RSStat("INT", value: $intelligence, skills: Character.skillMap["INT"]!, proficiencies: $proficiencies, proficiencyBonus: proficiencyBonus,  savingThrows: $savingThrows)
+                    RSStat("SAG", value: $wisdom, skills: Character.skillMap["SAG"]!, proficiencies: $proficiencies, proficiencyBonus: proficiencyBonus,  savingThrows: $savingThrows)
+                    RSStat("CAR", value: $charisma, skills: Character.skillMap["CAR"]!, proficiencies: $proficiencies, proficiencyBonus: proficiencyBonus,  savingThrows: $savingThrows)
                 }
             }
             VStack(spacing: RS.cardGap) {
-                RSStat("FOR", value: $strength, skills: Character.skillMap["FOR"]!, proficiencies: $proficiencies, proficiencyBonus: 4, savingThrows: $savingThrows)
-                RSStat("DES", value: $dexterity, skills: Character.skillMap["DES"]!, proficiencies: $proficiencies, proficiencyBonus: 4, savingThrows: $savingThrows)
-                RSStat("COS", value: $constitution, skills: [], proficiencies: $proficiencies, proficiencyBonus: 4,  savingThrows: $savingThrows)
-                RSStat("INT", value: $intelligence, skills: Character.skillMap["INT"]!, proficiencies: $proficiencies, proficiencyBonus: 4,  savingThrows: $savingThrows)
-                RSStat("SAG", value: $wisdom, skills: Character.skillMap["SAG"]!, proficiencies: $proficiencies, proficiencyBonus: 4,  savingThrows: $savingThrows)
-                RSStat("CAR", value: $charisma, skills: Character.skillMap["CAR"]!, proficiencies: $proficiencies, proficiencyBonus: 4,  savingThrows: $savingThrows)
+                ProficiencyBonusCard(bonus: $proficiencyBonus)
+                RSStat("FOR", value: $strength, skills: Character.skillMap["FOR"]!, proficiencies: $proficiencies, proficiencyBonus: proficiencyBonus, savingThrows: $savingThrows)
+                RSStat("DES", value: $dexterity, skills: Character.skillMap["DES"]!, proficiencies: $proficiencies, proficiencyBonus: proficiencyBonus, savingThrows: $savingThrows)
+                RSStat("COS", value: $constitution, skills: [], proficiencies: $proficiencies, proficiencyBonus: proficiencyBonus,  savingThrows: $savingThrows)
+                RSStat("INT", value: $intelligence, skills: Character.skillMap["INT"]!, proficiencies: $proficiencies, proficiencyBonus: proficiencyBonus,  savingThrows: $savingThrows)
+                RSStat("SAG", value: $wisdom, skills: Character.skillMap["SAG"]!, proficiencies: $proficiencies, proficiencyBonus: proficiencyBonus,  savingThrows: $savingThrows)
+                RSStat("CAR", value: $charisma, skills: Character.skillMap["CAR"]!, proficiencies: $proficiencies, proficiencyBonus: proficiencyBonus,  savingThrows: $savingThrows)
             }
         }
         .frame(maxWidth: 400)
     }
 }
+
+struct ProficiencyBonusCard: View {
+    @Binding var bonus: Int
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text("Competenza")
+                .font(.title.weight(.bold))
+                .multilineTextAlignment(.center)
+
+            Text(String(format: "%+d", bonus))
+                .font(.system(size: 36, weight: .bold, design: .rounded))
+
+            RSIncDec(value: $bonus, range: 1...10)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: RS.corner, style: .continuous)
+                .fill(.background.opacity(0.6))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: RS.corner)
+                .stroke(.orange.opacity(0.15), lineWidth: 0)
+                .allowsHitTesting(false)
+        )
+    }
+}
+
 
 // MARK: - RIGHT GRID
 private struct RightGridView: View {
@@ -233,8 +264,7 @@ private struct RightGridView: View {
         LazyVGrid(columns: [GridItem(.adaptive(minimum: 280), spacing: RS.cardGap)],
                   spacing: RS.cardGap) {
             
-            StatCardView(proficiencyBonus: $character.proficiencyBonus,
-                         passivePerception: $character.passivePerception,
+            StatCardView(passivePerception: $character.passivePerception,
                          armorClass: $character.armorClass,
                          initiative: $character.initiative,
                          speed:      $character.speed)
@@ -252,8 +282,7 @@ private struct RightGridView: View {
                           source: .subclass,
                           abilities: $character.subclassAbilities)
 
-            EmptyCard(title: "Talenti")
-            EmptyCard(title: "Incantesimi")
+            FeatsCard(title: "Talenti", feats: $character.feats)
         }
         .frame(maxWidth: .infinity)
     }
@@ -261,7 +290,6 @@ private struct RightGridView: View {
 
 // ── 1. Stat card
 private struct StatCardView: View {
-    @Binding var proficiencyBonus:  Int
     @Binding var passivePerception: Int
     @Binding var armorClass: Int
     @Binding var initiative: Int
@@ -269,9 +297,7 @@ private struct StatCardView: View {
     
     var body: some View {
         RSCard(title: "Statistiche") {
-            RSEditNumber(label: "Bonus Competenza",   value: $proficiencyBonus)
             RSEditNumber(label: "Percezione Passiva", value: $passivePerception)
-            Divider()
             RSEditNumber(label: "CA",          value: $armorClass)
             RSEditNumber(label: "Iniziativa",  value: $initiative)
             RSEditNumber(label: "Velocità (m)", value: $speed)
@@ -331,12 +357,6 @@ private struct ProficienciesCardView: View {
     }
 }
 
-
-// ── 3. Placeholder card
-private struct EmptyCard: View {
-    let title: String
-    var body: some View { RSCard(title: title) { EmptyView() } }
-}
 
 // MARK: - GENERIC CARD (lightweight bg + no shadow)
 struct RSCard<Content: View>: View {
@@ -554,7 +574,7 @@ struct RSStat: View {
                 let bonus = modifier + (savingThrows.contains(title) ? proficiencyBonus : 0)
 
                 Text("Tiro Salvezza: \(String(format: "%+d", bonus))")
-                    .font(.subheadline)
+                    .font(.headline)
                 
                 Spacer()
             }
