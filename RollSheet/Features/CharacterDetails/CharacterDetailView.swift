@@ -234,22 +234,21 @@ private struct RightGridView: View {
                   spacing: RS.cardGap) {
             
             StatCardView(proficiencyBonus: $character.proficiencyBonus,
-                         passivePerception: $character.passivePerception)
+                         passivePerception: $character.passivePerception,
+                         armorClass: $character.armorClass,
+                         initiative: $character.initiative,
+                         speed:      $character.speed)
             
-            CombatCardView(armorClass: $character.armorClass,
-                           initiative: $character.initiative,
-                           speed:      $character.speed)
-            
-            EmptyCard(title: "Addestramento e Competenze")
-            AbilitiesCard(title: "\(character.race) – Abilità",
+            ProficienciesCardView(armorProficiencies: $character.armorProficiencies, weaponProficiencies: $character.weaponProficiencies, toolProficiencies: $character.toolProficiencies)
+            AbilitiesCard(title: "\(character.race)",
                           source: .race,
                           abilities: $character.racialAbilities)
 
-            AbilitiesCard(title: "\(character.characterClass) – Abilità",
+            AbilitiesCard(title: "\(character.characterClass)",
                           source: .class,
                           abilities: $character.classAbilities)
 
-            AbilitiesCard(title: "\(character.subclass ?? "No subclass") – Abilità",
+            AbilitiesCard(title: "\(character.subclass ?? "No subclass")",
                           source: .subclass,
                           abilities: $character.subclassAbilities)
 
@@ -264,31 +263,74 @@ private struct RightGridView: View {
 private struct StatCardView: View {
     @Binding var proficiencyBonus:  Int
     @Binding var passivePerception: Int
-    
-    var body: some View {
-        RSCard(title: "Statistiche") {
-            RSEditNumber(label: "Bonus Competenza",   value: $proficiencyBonus)
-            RSEditNumber(label: "Percezione Passiva", value: $passivePerception)
-        }
-    }
-}
-
-// ── 2. Combat card
-private struct CombatCardView: View {
     @Binding var armorClass: Int
     @Binding var initiative: Int
     @Binding var speed:      Int
     
     var body: some View {
-        RSCard(title: "Combattimento") {
-            VStack(spacing: 18) {
-                RSEditNumber(label: "CA",          value: $armorClass)
-                RSEditNumber(label: "Iniziativa",  value: $initiative)
-                RSEditNumber(label: "Velocità (m)", value: $speed)
-            }
+        RSCard(title: "Statistiche") {
+            RSEditNumber(label: "Bonus Competenza",   value: $proficiencyBonus)
+            RSEditNumber(label: "Percezione Passiva", value: $passivePerception)
+            Divider()
+            RSEditNumber(label: "CA",          value: $armorClass)
+            RSEditNumber(label: "Iniziativa",  value: $initiative)
+            RSEditNumber(label: "Velocità (m)", value: $speed)
         }
     }
 }
+
+private struct ProficienciesCardView: View {
+    @Binding var armorProficiencies: [ArmorType]
+    @Binding var weaponProficiencies: [WeaponType]
+    @Binding var toolProficiencies: [ToolType]
+    
+    @State private var newArmor: ArmorType?
+    @State private var newWeapon: WeaponType?
+    @State private var newTool: ToolType?
+
+    var body: some View {
+        RSCard(title: "Addestramento e Competenze") {
+            VStack(spacing: 18) {
+                proficiencySection(title: "Armature", items: $armorProficiencies, allCases: ArmorType.allCases)
+                Divider()
+                proficiencySection(title: "Armi", items: $weaponProficiencies, allCases: WeaponType.allCases)
+                Divider()
+                proficiencySection(title: "Strumenti", items: $toolProficiencies, allCases: ToolType.allCases)
+            }
+        }
+    }
+
+    private func proficiencySection<T: Hashable & Identifiable & CustomStringConvertible>(title: String, items: Binding<[T]>, allCases: [T]) -> some View {
+        VStack(alignment: .leading) {
+            Text(title)
+                .font(.headline)
+
+            ForEach(items.wrappedValue, id: \.self) { item in
+                HStack {
+                    Text(item.description)
+                    Spacer()
+                    Button(role: .destructive) {
+                        if let index = items.wrappedValue.firstIndex(of: item) {
+                            items.wrappedValue.remove(at: index)
+                        }
+                    } label: {
+                        Image(systemName: "trash")
+                    }
+                }
+            }
+
+            Menu("Aggiungi \(title.lowercased())") {
+                ForEach(allCases.filter { !items.wrappedValue.contains($0) }, id: \.self) { option in
+                    Button(option.description) {
+                        items.wrappedValue.append(option)
+                    }
+                }
+            }
+            .padding(.top, 5)
+        }
+    }
+}
+
 
 // ── 3. Placeholder card
 private struct EmptyCard: View {
