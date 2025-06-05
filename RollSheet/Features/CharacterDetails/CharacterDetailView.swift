@@ -79,20 +79,32 @@ private struct HeaderRowView: View {
                 HeaderInfoCard(character: character)
                 HPMiniCard(maxHP:     $character.maxHP,
                            currentHP: $character.currentHP,
-                           tempHP:    $character.tempHP)
-                DeathSaveMiniCard(successes: $character.deathSavesSuccess,
-                                  failures:  $character.deathSavesFailure)
+                           tempHP:    $character.tempHP,
+                           successes: $character.deathSavesSuccess,
+                           failures:  $character.deathSavesFailure)
+                SpellsCard()
             }
             VStack(spacing: RS.gap) {
                 HeaderInfoCard(character: character)
                 HStack(spacing: RS.cardGap) {
                     HPMiniCard(maxHP:     $character.maxHP,
                                currentHP: $character.currentHP,
-                               tempHP:    $character.tempHP)
-                    DeathSaveMiniCard(successes: $character.deathSavesSuccess,
-                                      failures:  $character.deathSavesFailure)
+                               tempHP:    $character.tempHP,
+                               successes: $character.deathSavesSuccess,
+                               failures:  $character.deathSavesFailure)
+                    SpellsCard()
                 }
             }
+        }
+    }
+}
+
+private struct SpellsCard: View {
+    var body: some View {
+        RSCard(title: "Incantesimi") {
+            Text("Nessun incantesimo… per ora.")
+                .font(.callout)
+                .foregroundColor(.secondary)
         }
     }
 }
@@ -161,27 +173,20 @@ private struct HPMiniCard: View {
     @Binding var maxHP:     Int
     @Binding var currentHP: Int
     @Binding var tempHP:    Int
-    
+    @Binding var successes: Int
+    @Binding var failures:  Int
+
     var body: some View {
         RSCard(title: "Punti Ferita") {
             VStack(spacing: 14) {
                 RSEditNumber(label: "Massimi",    value: $maxHP)
                 RSEditNumber(label: "Correnti",   value: $currentHP)
                 RSEditNumber(label: "Temporanei", value: $tempHP)
+                Divider()
+                if currentHP <= 0 {
+                    RSDeathSaveDots(successes: $successes, failures: $failures)
+                }
             }
-        }
-    }
-}
-
-// ── 3. Death Save card
-private struct DeathSaveMiniCard: View {
-    @Binding var successes: Int
-    @Binding var failures:  Int
-    
-    var body: some View {
-        RSCard(title: "Tiri Salvezza") {
-            RSDeathSaveDots(successes: $successes,
-                            failures:  $failures)
         }
     }
 }
@@ -298,7 +303,7 @@ private struct StatCardView: View {
     var body: some View {
         RSCard(title: "Statistiche") {
             RSEditNumber(label: "Percezione Passiva", value: $passivePerception)
-            RSEditNumber(label: "CA",          value: $armorClass)
+            RSEditNumber(label: "Classe Armatura (CA)", value: $armorClass)
             RSEditNumber(label: "Iniziativa",  value: $initiative)
             RSEditNumber(label: "Velocità (m)", value: $speed)
         }
