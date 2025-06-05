@@ -70,6 +70,10 @@ class Character {
     @Relationship(deleteRule: .cascade) var feats: [Feat]
 
     // MARK: - Magia
+    var spellcastingClass: String?           // Es. "Mago", "Chierico", ecc.
+    var spellcastingAbility: String?         // Es. "INT", "SAG", "CAR"
+    var spellSaveDC: Int?                    // CD salvezza contro incantesimi
+    var spellAttackBonus: Int?               // Bonus all'attacco con incantesimi
     var spellSlots: [Int]
     @Relationship(deleteRule: .cascade) var knownSpells: [Spell]
 

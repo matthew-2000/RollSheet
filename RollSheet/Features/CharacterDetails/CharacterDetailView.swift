@@ -82,8 +82,10 @@ private struct HeaderRowView: View {
                            tempHP:    $character.tempHP,
                            successes: $character.deathSavesSuccess,
                            failures:  $character.deathSavesFailure)
-                SpellsCard()
-            }
+                SpellsCard(spellcastingClass: $character.spellcastingClass,
+                           spellcastingAbility: $character.spellcastingAbility,
+                           spellSaveDC: $character.spellSaveDC,
+                           spellAttackBonus: $character.spellAttackBonus)            }
             VStack(spacing: RS.gap) {
                 HeaderInfoCard(character: character)
                 HStack(spacing: RS.cardGap) {
@@ -92,19 +94,81 @@ private struct HeaderRowView: View {
                                tempHP:    $character.tempHP,
                                successes: $character.deathSavesSuccess,
                                failures:  $character.deathSavesFailure)
-                    SpellsCard()
-                }
+                    SpellsCard(spellcastingClass: $character.spellcastingClass,
+                               spellcastingAbility: $character.spellcastingAbility,
+                               spellSaveDC: $character.spellSaveDC,
+                               spellAttackBonus: $character.spellAttackBonus)                }
             }
         }
     }
 }
 
 private struct SpellsCard: View {
+    @Binding var spellcastingClass: String?
+    @Binding var spellcastingAbility: String?
+    @Binding var spellSaveDC: Int?
+    @Binding var spellAttackBonus: Int?
+
     var body: some View {
         RSCard(title: "Incantesimi") {
-            Text("Nessun incantesimo… per ora.")
-                .font(.callout)
-                .foregroundColor(.secondary)
+            VStack(alignment: .leading, spacing: 18) {
+                
+                HStack(spacing: 4) {
+                    Text("Classe:").font(.headline)
+                    RSEditInlineText(
+                        text: Binding(
+                            get: { spellcastingClass ?? "" },
+                            set: { spellcastingClass = $0.isEmpty ? nil : $0 }
+                        ),
+                        font: .title2
+                    )
+                }
+
+                HStack(spacing: 4) {
+                    Text("Abilità:").font(.headline)
+                    RSEditInlineText(
+                        text: Binding(
+                            get: { spellcastingAbility ?? "" },
+                            set: { spellcastingAbility = $0.isEmpty ? nil : $0 }
+                        ),
+                        font: .title2
+                    )
+                }
+
+                RSEditNumber(
+                    label: "CD Tiro Salvezza",
+                    value: Binding(
+                        get: { spellSaveDC ?? 0 },
+                        set: { spellSaveDC = $0 }
+                    )
+                )
+
+                RSEditNumber(
+                    label: "Bonus Attacco",
+                    value: Binding(
+                        get: { spellAttackBonus ?? 0 },
+                        set: { spellAttackBonus = $0 }
+                    )
+                )
+                
+                NavigationLink {
+                    SpellListView()
+                } label: {
+                    HStack {
+                        Image(systemName: "book")
+                        Text("Apri Lista Incantesimi")
+                            .font(.title3.bold())
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: RS.corner)
+                            .fill(Color.orange.opacity(0.15))
+                    )
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 12)
+            }
         }
     }
 }
@@ -400,7 +464,7 @@ struct RSCard<Content: View>: View {
 }
 
 // MARK: - “Ghost” editable Text (String)
-private struct RSEditText: View {
+struct RSEditText: View {
     var label: String
     @Binding var text: String
     @FocusState private var foc: Bool
@@ -415,7 +479,7 @@ private struct RSEditText: View {
 }
 
 // MARK: - “Ghost” editable Number
-private struct RSEditNumber: View {
+struct RSEditNumber: View {
     var label: String
     @Binding var value: Int
     var suffix: String = ""
@@ -434,7 +498,7 @@ private struct RSEditNumber: View {
 }
 
 // MARK: - Inline editable (String)
-private struct RSEditInlineText: View {
+struct RSEditInlineText: View {
     @Binding var text: String
     var font: Font = .title3
     @FocusState private var foc: Bool
@@ -453,7 +517,7 @@ private struct RSEditInlineText: View {
 }
 
 // MARK: - Inline editable (Number)
-private struct RSEditInlineNumber: View {
+struct RSEditInlineNumber: View {
     @Binding var value: Int
     var font: Font = .body
     var prefix: String = ""
@@ -508,7 +572,7 @@ private struct RSEditInlineNumber: View {
 }
 
 // MARK: - Inc/Dec control
-private struct RSIncDec: View {
+struct RSIncDec: View {
     @Binding var value: Int
     var range: ClosedRange<Int>
     
@@ -640,7 +704,7 @@ struct RSStat: View {
 }
 
 // MARK: - Death Save dots control
-private struct RSDeathSaveDots: View {
+struct RSDeathSaveDots: View {
     @Binding var successes: Int   // 0…3
     @Binding var failures:  Int   // 0…3
     
